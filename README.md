@@ -1,6 +1,6 @@
 # KaiMhantOS
 
-A simple 32-bit protected mode Operating System built for a semester presentation.
+A simple 32-bit protected mode Operating System built for learning Operating Systems.
 
 ## Features
 - **32-Bit Protected Mode**: Boots directly into x86 32-bit mode via GRUB Multiboot.
