@@ -20,11 +20,11 @@ void kernel_main(void) {
     idt_init();
     
     // Enable hardware interrupts!
-    asm volatile("sti");
+    __asm__ __volatile__("sti");
 
     vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
     vga_print("================================================================================\n");
-    vga_print("                     KaiMhantOS Phase 2: Hardware Interrupts!                   \n");
+    vga_print("                     KaiMhantOS : Kai Vishay Nai                                \n");
     vga_print("================================================================================\n\n");
     vga_set_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
     vga_print("Type 'help' to see available commands, or 'divzero' to test exceptions.\n\n");
@@ -33,13 +33,13 @@ void kernel_main(void) {
     int pos = 0;
 
     vga_set_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
-    vga_print("KaiMhant> ");
+    vga_print("KaiMhantOS> ");
     vga_set_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 
     while (1) {
         // We no longer block in a tight polling loop!
         // We can just halt the CPU until an interrupt (like a keystroke) wakes it up.
-        asm volatile("hlt");
+        __asm__ __volatile__("hlt");
 
         char c = keyboard_fetch_char();
         if (c == 0) continue;
@@ -56,6 +56,7 @@ void kernel_main(void) {
                 vga_print("  clear   - Clear the screen\n");
                 vga_print("  about   - Information about this OS\n");
                 vga_print("  restart - Reboot the computer\n");
+                vga_print("  shutdown- Power off the computer\n");
                 vga_print("  divzero - Trigger a Divide-by-Zero Exception\n");
             } else if (strcmp(buffer, "clear") == 0) {
                 vga_clear();
@@ -63,7 +64,7 @@ void kernel_main(void) {
                 vga_print("KaiMhantOS v1.1\n");
                 vga_print("Now running with Hardware Interrupts (IDT)!\n");
             } else if (strcmp(buffer, "divzero") == 0) {
-                asm volatile("div %0" : : "r"(0)); // Trigger divide by zero
+                __asm__ __volatile__("div %0" : : "r"(0)); // Trigger divide by zero
             } else if (strcmp(buffer, "restart") == 0) {
                 vga_print("Restarting system...\n");
                 uint8_t good = 0x02;
@@ -71,7 +72,12 @@ void kernel_main(void) {
                     good = inb(0x64);
                 }
                 outb(0x64, 0xFE);
-                while(1) { asm volatile("hlt"); } // Wait for reboot to happen
+                while(1) { __asm__ __volatile__("hlt"); } // Wait for reboot to happen
+            } else if (strcmp(buffer, "shutdown") == 0) {
+                vga_print("Shutting down system...\n");
+                // QEMU specific ACPI shutdown (PIIX4 PM1a control register)
+                outw(0x604, 0x2000); 
+                while(1) { __asm__ __volatile__("hlt"); } // Wait for shutdown
             } else if (buffer[0] == 'e' && buffer[1] == 'c' && buffer[2] == 'h' && buffer[3] == 'o' && buffer[4] == ' ') {
                 vga_print(&buffer[5]);
                 vga_print("\n");
@@ -85,7 +91,7 @@ void kernel_main(void) {
 
             pos = 0;
             vga_set_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
-            vga_print("KaiMhant> ");
+            vga_print("KaiMhantOS> ");
             vga_set_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 
         } else if (c == '\b') {

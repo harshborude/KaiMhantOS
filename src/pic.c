@@ -13,11 +13,6 @@
 #define ICW4_8086	0x01		/* 8086/88 (MCS-80/85) mode */
 
 void pic_remap(int offset1, int offset2) {
-	unsigned char a1, a2;
- 
-	a1 = inb(PIC1_DATA);                        // save masks
-	a2 = inb(PIC2_DATA);
- 
 	outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);  // starts the initialization sequence (in cascade mode)
 	outb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
 	outb(PIC1_DATA, offset1);                 // ICW2: Master PIC vector offset

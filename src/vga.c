@@ -1,4 +1,5 @@
 #include "vga.h"
+#include "io.h"
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -17,6 +18,14 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
 	return (uint16_t) uc | (uint16_t) color << 8;
 }
 
+static void vga_update_cursor(void) {
+    uint16_t pos = terminal_row * VGA_WIDTH + terminal_column;
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (uint8_t)(pos & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
+}
+
 void vga_init(void) {
 	terminal_row = 0;
 	terminal_column = 0;
@@ -28,6 +37,7 @@ void vga_init(void) {
 			terminal_buffer[index] = vga_entry(' ', terminal_color);
 		}
 	}
+	vga_update_cursor();
 }
 
 void vga_set_color(uint8_t fg, uint8_t bg) {
@@ -43,6 +53,7 @@ void vga_clear(void) {
 	}
     terminal_row = 0;
     terminal_column = 0;
+    vga_update_cursor();
 }
 
 static void scroll(void) {
@@ -61,12 +72,14 @@ void vga_putchar(char c) {
     if (c == '\n') {
         terminal_column = 0;
         if (++terminal_row == VGA_HEIGHT) scroll();
+        vga_update_cursor();
         return;
     }
     if (c == '\b') {
         if (terminal_column > 0) {
             terminal_column--;
             terminal_buffer[terminal_row * VGA_WIDTH + terminal_column] = vga_entry(' ', terminal_color);
+            vga_update_cursor();
         }
         return;
     }
@@ -75,6 +88,7 @@ void vga_putchar(char c) {
 		terminal_column = 0;
 		if (++terminal_row == VGA_HEIGHT) scroll();
 	}
+	vga_update_cursor();
 }
 
 void vga_print(const char* data) {

@@ -23,7 +23,7 @@ void idt_init(void) {
 
     // Get current Code Segment
     uint16_t current_cs;
-    asm volatile("mov %%cs, %0" : "=r"(current_cs));
+    __asm__ __volatile__("mov %%cs, %0" : "=r"(current_cs));
 
     // Set all entries to dummy_isr to prevent unhandled interrupts crashing the OS
     for(int i=0; i<256; i++) {

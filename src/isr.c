@@ -7,7 +7,7 @@ void isr0_handler(void) {
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_RED);
     vga_print("\nEXCEPTION: DIVIDE BY ZERO\n");
     // Halt execution since we can't recover easily without process isolation
-    while(1) { asm volatile("hlt"); }
+    while(1) { __asm__ __volatile__("hlt"); }
 }
 
 void irq1_handler(void) {
