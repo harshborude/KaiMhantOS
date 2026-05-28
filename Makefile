@@ -1,15 +1,19 @@
 AS = nasm
 CC = gcc
-CFLAGS = -m32 -ffreestanding -O2 -Wall -Wextra -fno-pie
-LDFLAGS = -m32 -T linker.ld -nostdlib -ffreestanding -O2 -no-pie
+CFLAGS = -m32 -ffreestanding -O2 -Wall -Wextra -fno-pie -mgeneral-regs-only
+LDFLAGS = -m32 -T linker.ld -nostdlib -ffreestanding -O2 -no-pie -Wl,--build-id=none
 
 SRC_DIR = src
 BUILD_DIR = build
 
 OBJS = $(BUILD_DIR)/boot.o \
+       $(BUILD_DIR)/interrupts.o \
        $(BUILD_DIR)/kernel.o \
        $(BUILD_DIR)/vga.o \
-       $(BUILD_DIR)/keyboard.o
+       $(BUILD_DIR)/keyboard.o \
+       $(BUILD_DIR)/idt.o \
+       $(BUILD_DIR)/pic.o \
+       $(BUILD_DIR)/isr.o
 
 ISO = kaimhantos.iso
 KERNEL = $(BUILD_DIR)/kernel.bin
@@ -39,7 +43,7 @@ iso: $(KERNEL)
 	grub-mkrescue -o $(ISO) $(BUILD_DIR)/isodir
 
 run: iso
-	qemu-system-i386 -cdrom $(ISO)
+	qemu-system-i386 -cdrom $(ISO) -boot d
 
 clean:
 	rm -rf $(BUILD_DIR)

@@ -1,7 +1,6 @@
 #include "keyboard.h"
 #include "io.h"
 
-// Scancode to ASCII mapping (US QWERTY, simple layout)
 static const char scancode_to_ascii[] = {
     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
     '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -9,18 +8,23 @@ static const char scancode_to_ascii[] = {
     'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' '
 };
 
-char keyboard_read_char(void) {
-    while (1) {
-        // Wait until PS/2 controller has data
-        if (inb(0x64) & 0x01) {
-            uint8_t scancode = inb(0x60);
-            
-            // Ignore key releases (high bit set)
-            if (!(scancode & 0x80)) {
-                if (scancode < sizeof(scancode_to_ascii)) {
-                    return scancode_to_ascii[scancode];
-                }
-            }
+static char latest_char = 0;
+static int char_ready = 0;
+
+void keyboard_handle_interrupt(void) {
+    uint8_t scancode = inb(0x60);
+    if (!(scancode & 0x80)) { // Not a release
+        if (scancode < sizeof(scancode_to_ascii)) {
+            latest_char = scancode_to_ascii[scancode];
+            char_ready = 1;
         }
     }
+}
+
+char keyboard_fetch_char(void) {
+    if (char_ready) {
+        char_ready = 0;
+        return latest_char;
+    }
+    return 0;
 }
